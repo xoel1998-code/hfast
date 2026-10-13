@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Calculadora del HScore Fast (HFast), versión simplificada del HScore para la identificación precoz de HLH en adultos con hiperferritinemia muy extrema. Herramienta de investigación.">
+<title>Calculadora HFast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;display=swap">
+<style>:root{color-scheme:light}html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}img{max-width:100%}[hidden]{display:none!important}
+/* Layout: hoja de puntuación — filas de variables a la izquierda, tarjeta de resultado fija a la derecha (apilada en móvil); la tira de la cohorte es la pieza propia */
+:root{
+  --bg:#F4F6FB; --surface:#FFFFFF; --ink:#1A2042; --muted:#5A6283; --line:#DCE1EF;
+  --brand:#2E3D8F; --mark:#3A4CA4; --sel-bg:#2E3D8F; --sel-fg:#FFFFFF;
+  --coral:#D24D6D; --coral-mark:#E0607F; --teal:#23806F; --teal-mark:#4FB3A0; --yellow:#F2D33C;
+  --z-low:#DDF1EB; --z-mid:#FBF0C0; --z-high:#FADDE5; --z-low-ink:#1E6B5D; --z-mid-ink:#6B5300; --z-high-ink:#9C2747;
+  --font-display:"Bricolage Grotesque", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1230; --surface:#161B3D; --ink:#ECEEF9; --muted:#A6ACCB; --line:#2B3260;
+  --brand:#AEB8F5; --mark:#8494EE; --sel-bg:#8494EE; --sel-fg:#0E1230;
+  --coral:#F38AA2; --coral-mark:#EE7392; --teal:#6FD3BF; --teal-mark:#4FB3A0; --yellow:#F2D33C;
+  --z-low:#123A35; --z-mid:#3B3313; --z-high:#43192A; --z-low-ink:#8BE0CE; --z-mid-ink:#F4DE7A; --z-high-ink:#F7A9BC;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0E1230; --surface:#161B3D; --ink:#ECEEF9; --muted:#A6ACCB; --line:#2B3260;
+  --brand:#AEB8F5; --mark:#8494EE; --sel-bg:#8494EE; --sel-fg:#0E1230;
+  --coral:#F38AA2; --coral-mark:#EE7392; --teal:#6FD3BF; --teal-mark:#4FB3A0; --yellow:#F2D33C;
+  --z-low:#123A35; --z-mid:#3B3313; --z-high:#43192A; --z-low-ink:#8BE0CE; --z-mid-ink:#F4DE7A; --z-high-ink:#F7A9BC;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.45;margin:0}
+.page{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:20px 96px}
+.top{display:grid;gap:6px;margin-bottom:18px}
+.eyebrow{margin:0;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{margin:0;font-family:var(--font-display);font-weight:800;font-size:clamp(1.9rem,6vw,2.6rem);line-height:1.05;color:var(--brand);text-wrap:balance;letter-spacing:-.01em}
+h1 span{font-weight:600;color:var(--muted)}
+.lede{margin:2px 0 0;max-width:62ch;color:var(--ink)}
+.grid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:880px){.grid{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:start}.result{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}}
+form{display:grid;gap:12px;min-width:0}
+.row{margin:0;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 14px 14px;min-width:0}
+legend{display:flex;align-items:baseline;gap:8px;padding:0;margin-bottom:10px;float:left;width:100%}
+legend+*{clear:both}
+.vn{font-weight:700;font-size:1.06rem}
+.vu{color:var(--muted);font-size:.9rem}
+.seg{display:grid;gap:8px}
+.seg.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.opt,.tg{position:relative;display:block;cursor:pointer;min-width:0}
+.opt input,.tg input{position:absolute;opacity:0;width:1px;height:1px}
+.o{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:58px;padding:8px 6px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);text-align:center;transition:background .15s,border-color .15s,color .15s}
+.r{font-weight:700;font-size:1rem;font-variant-numeric:tabular-nums}
+.p,.q{font-size:.86rem;color:var(--muted)}
+.opt:hover .o,.tg:hover .o{border-color:var(--mark)}
+.opt input:checked+.o,.tg input:checked+.o{background:var(--sel-bg);border-color:var(--sel-bg);color:var(--sel-fg)}
+.opt input:checked+.o .p,.tg input:checked+.o .q{color:var(--sel-fg);opacity:.9}
+.opt input:focus-visible+.o,.tg input:focus-visible+.o{outline:3px solid var(--coral-mark);outline-offset:2px}
+.chk{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:420px){.chk .r{font-size:.92rem}.chk .q{font-size:.8rem}}
+.sub{margin:8px 2px 0;font-size:.9rem}
+.muted{color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+button{font:inherit;font-weight:700;border-radius:999px;padding:10px 18px;cursor:pointer;border:1.5px solid var(--brand);background:transparent;color:var(--brand)}
+button.primary{background:var(--brand);color:var(--surface)}
+button:focus-visible{outline:3px solid var(--coral-mark);outline-offset:2px}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px 18px 16px;display:grid;gap:14px;min-width:0}
+.score{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.score .lab{font-family:var(--font-display);font-weight:600;font-size:1.1rem;color:var(--muted)}
+.num{font-family:var(--font-display);font-weight:800;font-size:clamp(3.6rem,15vw,5rem);line-height:.9;color:var(--brand);letter-spacing:-.02em}
+.max{color:var(--muted);font-size:1.1rem}
+.badge{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid var(--muted);color:var(--muted);border-radius:999px;padding:2px 9px;align-self:center}
+.break{font-size:.95rem;color:var(--muted);margin-top:-6px;font-variant-numeric:tabular-nums}
+.verdict{border-radius:16px;padding:14px 14px 15px;background:var(--bg);display:grid;gap:6px}
+.verdict .pill{justify-self:start;font-weight:700;font-size:.85rem;border-radius:999px;padding:3px 11px}
+.verdict h2{margin:0;font-family:var(--font-display);font-weight:800;font-size:1.5rem;line-height:1.1}
+.verdict p{margin:0;max-width:60ch}
+.v-low{background:var(--z-low)} .v-low .pill{background:var(--teal-mark);color:#0B2A24} .v-low h2{color:var(--z-low-ink)}
+.v-mid{background:var(--z-mid)} .v-mid .pill{background:var(--yellow);color:#3A2E00} .v-mid h2{color:var(--z-mid-ink)}
+.v-high{background:var(--z-high)} .v-high .pill{background:var(--coral-mark);color:#3A0A17} .v-high h2{color:var(--z-high-ink)}
+
+.v-pend .pill{background:var(--line);color:var(--ink)}
+figure{margin:0}
+.strip{width:100%;max-width:560px;height:auto;display:block;color:var(--ink)}
+.strip .zl{fill:var(--z-low)} .strip .zm{fill:var(--z-mid)} .strip .zh{fill:var(--z-high)}
+.strip .dn{fill:var(--mark)} .strip .dp{fill:var(--coral-mark)}
+.strip .ring{stroke:var(--surface);stroke-width:1.2}
+.strip .tick{fill:var(--muted);font-size:10.5px;font-family:var(--font-body)}
+.strip .ax{stroke:var(--line);stroke-width:1.5}
+.strip .you{stroke:var(--ink);stroke-width:2}
+.strip .youlab{fill:var(--ink);font-weight:700;font-size:10.5px;font-family:var(--font-body)}
+.strip .youbg{fill:var(--surface)}
+figcaption{font-size:.86rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}
+.k{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block}
+.sw.n{background:var(--mark)} .sw.p{background:var(--coral-mark)} .sw.d{background:var(--coral-mark);border-radius:2px;transform:rotate(45deg) scale(.85)}
+.bonus{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
+.bonus h3{margin:0;font-size:1rem;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bonus ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;font-size:.9rem}
+.bonus li{display:flex;gap:7px;align-items:flex-start;color:var(--muted);min-width:0}
+.bonus li.on{color:var(--ink);font-weight:700}
+.bonus li .b{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:1px}
+.bonus li.on .b{background:var(--teal-mark);border-color:var(--teal-mark)}
+.fine{margin-top:22px;font-size:.84rem;color:var(--muted);display:grid;gap:6px;max-width:80ch}
+.fine p{margin:0}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;box-shadow:0 -6px 18px rgba(20,25,60,.08);transform:translateY(0);transition:transform .2s}
+.dock[hidden]{display:none!important}
+.dock .dn{font-family:var(--font-display);font-weight:800;font-size:1.7rem;color:var(--brand);min-width:3ch}
+.dock .dt{font-weight:700;font-size:.95rem;flex:1;min-width:0}
+.dock a{font-weight:700;color:var(--brand);font-size:.9rem;white-space:nowrap}
+@media (min-width:880px){.dock{display:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="page">
+<header class="top">
+  <p class="eyebrow">Herramienta de investigación · 47.º Congreso SEMI · Murcia 2026</p>
+  <h1>HScore Fast <span>(HFast)</span></h1>
+  <p class="lede">Versión simplificada del HScore con cinco variables disponibles en las primeras horas de ingreso.</p>
+</header>
+<main class="grid">
+<form id="f" autocomplete="off">
+
+<fieldset class="row" id="g-temp"><legend><span class="vn">Temperatura máxima</span><span class="vu">°C</span></legend><div class="seg c3" role="radiogroup"><label class="opt" for="temp-0"><input type="radio" name="temp" id="temp-0" value="0"><span class="o"><span class="r">&lt;38,4</span><span class="p">0 pts</span></span></label><label class="opt" for="temp-1"><input type="radio" name="temp" id="temp-1" value="1"><span class="o"><span class="r">38,4–39,4</span><span class="p">33 pts</span></span></label><label class="opt" for="temp-2"><input type="radio" name="temp" id="temp-2" value="2"><span class="o"><span class="r">&gt;39,4</span><span class="p">49 pts</span></span></label></div></fieldset>
+<fieldset class="row" id="g-cyt"><legend><span class="vn">Citopenias</span><span class="vu">marca las presentes</span></legend>
+<div class="chk">
+<label class="tg" for="hb"><input type="checkbox" id="hb" name="hb"><span class="o"><span class="r">Hemoglobina</span><span class="q">≤9,2 g/dl</span></span></label>
+<label class="tg" for="leu"><input type="checkbox" id="leu" name="leu"><span class="o"><span class="r">Leucocitos</span><span class="q">≤5.000/µl</span></span></label>
+<label class="tg" for="plt"><input type="checkbox" id="plt" name="plt"><span class="o"><span class="r">Plaquetas</span><span class="q">≤110.000/µl</span></span></label>
+</div><p class="sub" id="cyt-out">0 líneas · 0 pts <span class="muted">(2 líneas: 24 · 3 líneas: 34)</span></p></fieldset>
+<fieldset class="row" id="g-ferr"><legend><span class="vn">Ferritina</span><span class="vu">ng/ml</span></legend><div class="seg c3" role="radiogroup"><label class="opt" for="ferr-0"><input type="radio" name="ferr" id="ferr-0" value="0"><span class="o"><span class="r">&lt;2.000</span><span class="p">0 pts</span></span></label><label class="opt" for="ferr-1"><input type="radio" name="ferr" id="ferr-1" value="1"><span class="o"><span class="r">2.000–6.000</span><span class="p">35 pts</span></span></label><label class="opt" for="ferr-2"><input type="radio" name="ferr" id="ferr-2" value="2"><span class="o"><span class="r">&gt;6.000</span><span class="p">50 pts</span></span></label></div></fieldset>
+<fieldset class="row" id="g-tg"><legend><span class="vn">Triglicéridos</span><span class="vu">mg/dl</span></legend><div class="seg c3" role="radiogroup"><label class="opt" for="tg-0"><input type="radio" name="tg" id="tg-0" value="0"><span class="o"><span class="r">&lt;133</span><span class="p">0 pts</span></span></label><label class="opt" for="tg-1"><input type="radio" name="tg" id="tg-1" value="1"><span class="o"><span class="r">133–354</span><span class="p">44 pts</span></span></label><label class="opt" for="tg-2"><input type="radio" name="tg" id="tg-2" value="2"><span class="o"><span class="r">&gt;354</span><span class="p">64 pts</span></span></label></div></fieldset>
+<fieldset class="row" id="g-fib"><legend><span class="vn">Fibrinógeno</span><span class="vu">mg/dl</span></legend><div class="seg c2" role="radiogroup"><label class="opt" for="fib-0"><input type="radio" name="fib" id="fib-0" value="0"><span class="o"><span class="r">&gt;250</span><span class="p">0 pts</span></span></label><label class="opt" for="fib-1"><input type="radio" name="fib" id="fib-1" value="1"><span class="o"><span class="r">≤250</span><span class="p">30 pts</span></span></label></div></fieldset>
+
+<div class="actions"><button type="button" class="primary" id="ex">Cargar un ejemplo</button><button type="reset" id="rs">Borrar</button></div>
+</form>
+<section class="result" id="result" aria-live="polite">
+  <div class="score"><span class="lab">HFast</span><span class="num" id="total">0</span><span class="max">/ 267</span><span class="badge" id="partial">parcial</span></div>
+  <div class="break" id="break">Faltan: temperatura, ferritina, triglicéridos y fibrinógeno</div>
+  <div class="verdict v-pend" id="verdict"><span class="pill" id="v-pill">Pendiente</span><h2 id="v-h">Completa las variables</h2><p id="v-p">El resultado se interpreta con lo observado en nuestra cohorte de 34 pacientes: por debajo de 110, entre 110 y 129, o desde 130 puntos.</p></div>
+  <figure>
+    <svg class="strip" id="strip" viewBox="0 0 360 118" role="img" aria-label="Distribución del HFast en los 34 pacientes de la cohorte"></svg>
+    <figcaption><span class="k"><span class="sw n"></span>HScore &lt;169</span><span class="k"><span class="sw p"></span>HScore ≥169 (fenotipo HLH)</span><span class="k"><span class="sw d"></span>HLH-2024 ≥5/7</span></figcaption>
+  </figure>
+  <div class="bonus"><h3><span>Bonus SAM</span><span id="b-sum">0 de 4 criterios · +0</span></h3>
+    <ul id="b-list"><li id="c-tg"><span class="b"></span>Triglicéridos &gt;354</li><li id="c-fib"><span class="b"></span>Fibrinógeno ≤250</li><li id="c-cyt"><span class="b"></span>≥2 citopenias</li><li id="c-fe"><span class="b"></span>Ferritina &gt;6.000</li></ul>
+    <p class="sub muted" style="margin:0">3 de 4: +20 · 4 de 4: +40</p>
+  </div>
+</section>
+</main>
+<footer class="fine">
+  <p><strong>Cómo leer el resultado.</strong> Fenotipo HLH = HScore original ≥169. Las frases describen lo observado en una cohorte retrospectiva unicéntrica de 34 adultos con ferritina ≥25.000 ng/ml (2020–2025): con HFast ≥110 se identificaron todos los casos (sensibilidad 100 %, especificidad 58 %) y con HFast ≥130 no hubo falsos positivos (especificidad 100 %, sensibilidad 88 %).</p>
+  <p>Es una herramienta exploratoria, sin validación externa, y solo se ha estudiado en adultos con ferritina ≥25.000 ng/ml; fuera de esa población la interpretación no está evaluada. No sustituye el juicio clínico ni orienta decisiones terapéuticas.</p>
+  <p>HLH: linfohistiocitosis hemofagocítica · SAM: síndrome de activación macrofágica.</p>
+  <p>Otero Dávila X, et al. Servicio de Medicina Interna, Hospital Álvaro Cunqueiro (Vigo).</p>
+</footer>
+<div class="dock" id="dock" hidden><span class="dn" id="d-num">0</span><span class="dt" id="d-txt">Completa las variables</span><a href="#result">Ver resultado</a></div>
+</div>
+
+<script>
+(function(){
+const COHORT = [[50, 0, 0], [50, 0, 0], [50, 0, 0], [50, 0, 0], [74, 0, 0], [74, 0, 0], [83, 0, 0], [83, 0, 0], [83, 0, 0], [84, 0, 0], [94, 0, 0], [94, 0, 0], [94, 0, 0], [94, 0, 0], [94, 0, 0], [113, 0, 0], [114, 0, 0], [114, 0, 0], [118, 0, 0], [118, 0, 0], [123, 0, 0], [124, 0, 0], [124, 1, 0], [127, 0, 0], [127, 0, 0], [128, 0, 0], [128, 0, 0], [134, 1, 0], [151, 1, 0], [151, 1, 0], [178, 1, 0], [201, 1, 1], [251, 1, 1], [257, 1, 1]];
+const f = document.getElementById('f');
+const $ = id => document.getElementById(id);
+const P = {temp:[0,33,49], ferr:[0,35,50], tg:[0,44,64], fib:[0,30]};
+const NAMES = {temp:'temperatura', ferr:'ferritina', tg:'triglicéridos', fib:'fibrinógeno'};
+const NB = ' ';
+function val(n){ const el = f.querySelector('input[name="'+n+'"]:checked'); return el ? +el.value : null; }
+function list(a){ return a.length<2 ? a.join('') : a.slice(0,-1).join(', ')+' y '+a[a.length-1]; }
+const ZONES = {
+  low:{cls:'v-low', pill:'HFast <110', h:'Poco sugestivo de HLH', p:'En nuestra cohorte, ninguno de los 15 pacientes con HFast <110 tenía fenotipo HLH (HScore ≥169).'},
+  mid:{cls:'v-mid', pill:'HFast 110–129', h:'Posible HLH', p:'En nuestra cohorte, 1 de los 12 pacientes en este rango tenía fenotipo HLH. Desde 110 puntos se identificaron todos los casos (sensibilidad 100'+NB+'%), con especificidad del 58'+NB+'%.'},
+  high:{cls:'v-high', pill:'HFast ≥130', h:'Compatible con HLH', p:'En nuestra cohorte, los 7 pacientes con HFast ≥130 tenían fenotipo HLH (especificidad y valor predictivo positivo del 100'+NB+'%), incluidos los 3 que cumplían criterios HLH-2024.'}
+};
+// ---- cohort strip ----
+const svg = $('strip'), NS = 'http://www.w3.org/2000/svg';
+const X0 = 12, X1 = 348, MAXS = 267, BASE = 84;
+const sx = s => X0 + (X1 - X0) * s / MAXS;
+function el(t, a, txt){ const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+function drawStrip(score){
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  svg.appendChild(el('rect', {x:sx(0), y:22, width:sx(110)-sx(0), height:BASE-18, rx:6, class:'zl'}));
+  svg.appendChild(el('rect', {x:sx(110), y:22, width:sx(130)-sx(110), height:BASE-18, class:'zm'}));
+  svg.appendChild(el('rect', {x:sx(130), y:22, width:sx(MAXS)-sx(130), height:BASE-18, rx:6, class:'zh'}));
+  svg.appendChild(el('line', {x1:X0, x2:X1, y1:BASE+5, y2:BASE+5, class:'ax'}));
+  [0,50,110,130,200,267].forEach(t => { const tx = el('text', {x:sx(t), y:BASE+19, 'text-anchor':(t===0?'start':t===267?'end':'middle'), class:'tick'}, String(t)); svg.appendChild(tx); });
+  const stack = {}; const R = 3.9;
+  COHORT.forEach(([s, hs, h5]) => {
+    const key = Math.round(s / 3.2); const k = stack[key] = (stack[key] || 0) + 1;
+    const cx = sx(s), cy = BASE - 1 - (k - 1) * (2*R + 1.2);
+    if (h5) { const d = R*1.25; svg.appendChild(el('rect', {x:cx-d/1.414, y:cy-d/1.414, width:d*1.414, height:d*1.414, transform:'rotate(45 '+cx+' '+cy+')', class:'dp ring'})); }
+    else svg.appendChild(el('circle', {cx, cy, r:R, class:(hs ? 'dp' : 'dn')+' ring'}));
+  });
+  if (score != null){
+    const x = sx(Math.min(score, MAXS));
+    svg.appendChild(el('line', {x1:x, x2:x, y1:16, y2:BASE+6, class:'you'}));
+    const lab = 'Tu paciente: ' + score; const w = lab.length * 6.1 + 12;
+    let lx = Math.min(Math.max(x - w/2, 1), 359 - w);
+    svg.appendChild(el('rect', {x:lx, y:1, width:w, height:16, rx:8, class:'youbg', stroke:'currentColor', 'stroke-width':1.2}));
+    svg.appendChild(el('text', {x:lx + w/2, y:12.6, 'text-anchor':'middle', class:'youlab'}, lab));
+  }
+}
+function update(){
+  const t = val('temp'), fe = val('ferr'), tg = val('tg'), fi = val('fib');
+  const ncyt = ['hb','leu','plt'].filter(id => $(id).checked).length;
+  const cytP = ncyt === 3 ? 34 : ncyt === 2 ? 24 : 0;
+  $('cyt-out').innerHTML = ncyt + (ncyt === 1 ? ' línea' : ' líneas') + ' · ' + cytP + NB + 'pts <span class="muted">(2 líneas: 24 · 3 líneas: 34)</span>';
+  let base = cytP; const miss = [];
+  [['temp',t],['ferr',fe],['tg',tg],['fib',fi]].forEach(([n,v]) => { if (v === null) miss.push(NAMES[n]); else base += P[n][v]; });
+  const crit = {tg: tg === 2, fib: fi === 1, cyt: ncyt >= 2, fe: fe === 2};
+  const k = Object.values(crit).filter(Boolean).length;
+  ['tg','fib','cyt','fe'].forEach(c => $('c-'+c).classList.toggle('on', crit[c]));
+  const complete = miss.length === 0;
+  const bonus = complete ? (k === 4 ? 40 : k === 3 ? 20 : 0) : null;
+  $('b-sum').textContent = k + ' de 4 criterios · ' + (complete ? '+' + bonus : 'pendiente');
+  const total = base + (bonus || 0);
+  $('total').textContent = total; $('d-num').textContent = complete ? total : '…';
+  $('partial').hidden = complete;
+  const v = $('verdict');
+  if (!complete){
+    $('break').textContent = 'Faltan: ' + list(miss);
+    v.className = 'verdict v-pend'; $('v-pill').textContent = 'Pendiente'; $('v-h').textContent = 'Completa las variables';
+    $('v-p').textContent = 'El resultado se interpreta con lo observado en nuestra cohorte de 34 pacientes: por debajo de 110, entre 110 y 129, o desde 130 puntos.';
+    $('d-txt').textContent = 'Faltan ' + miss.length + (miss.length === 1 ? ' variable' : ' variables');
+    drawStrip(null); return;
+  }
+  $('break').textContent = 'Variables ' + base + ' + bonus SAM ' + bonus;
+  const z = total < 110 ? ZONES.low : total < 130 ? ZONES.mid : ZONES.high;
+  v.className = 'verdict ' + z.cls; $('v-pill').textContent = z.pill; $('v-h').textContent = z.h; $('v-p').textContent = z.p;
+  $('d-txt').textContent = z.h; drawStrip(total);
+}
+f.addEventListener('change', update);
+f.addEventListener('reset', () => setTimeout(update, 0));
+$('ex').addEventListener('click', () => {
+  f.reset();
+  $('temp-1').checked = true; $('hb').checked = true; $('plt').checked = true;
+  $('ferr-2').checked = true; $('tg-1').checked = true; $('fib-1').checked = true;
+  update();
+  $('break').textContent += ' · ejemplo ilustrativo';
+});
+// mini dock on phones while the result card is off-screen
+const dock = $('dock');
+if ('IntersectionObserver' in window){
+  new IntersectionObserver(es => es.forEach(e => { dock.hidden = e.isIntersecting; }), {threshold: 0.15}).observe($('result'));
+}
+update();
+})();
+</script>
+</body>
+</html>
