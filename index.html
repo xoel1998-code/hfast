@@ -145,7 +145,7 @@ figcaption{font-size:.86rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4
     <svg class="strip" id="strip" viewBox="0 0 360 118" role="img" aria-label="Distribución del HFast en los 34 pacientes de la cohorte"></svg>
     <figcaption><span class="k"><span class="sw n"></span>HScore &lt;169</span><span class="k"><span class="sw p"></span>HScore ≥169 (fenotipo HLH)</span><span class="k"><span class="sw d"></span>HLH-2024 ≥5/7</span></figcaption>
   </figure>
-  <div class="bonus"><h3><span>Bonus SAM</span><span id="b-sum">0 de 4 criterios · +0</span></h3>
+  <div class="bonus"><h3><span>Bonus</span><span id="b-sum">0 de 4 criterios · +0</span></h3>
     <ul id="b-list"><li id="c-tg"><span class="b"></span>Triglicéridos &gt;354</li><li id="c-fib"><span class="b"></span>Fibrinógeno ≤250</li><li id="c-cyt"><span class="b"></span>≥2 citopenias</li><li id="c-fe"><span class="b"></span>Ferritina &gt;6.000</li></ul>
     <p class="sub muted" style="margin:0">3 de 4: +20 · 4 de 4: +40</p>
   </div>
@@ -154,7 +154,7 @@ figcaption{font-size:.86rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4
 <footer class="fine">
   <p><strong>Cómo leer el resultado.</strong> Fenotipo HLH = HScore original ≥169. Las frases describen lo observado en una cohorte retrospectiva unicéntrica de 34 adultos con ferritina ≥25.000 ng/ml (2020–2025): con HFast ≥110 se identificaron todos los casos (sensibilidad 100 %, especificidad 58 %) y con HFast ≥130 no hubo falsos positivos (especificidad 100 %, sensibilidad 88 %).</p>
   <p>Es una herramienta exploratoria, sin validación externa, y solo se ha estudiado en adultos con ferritina ≥25.000 ng/ml; fuera de esa población la interpretación no está evaluada. No sustituye el juicio clínico ni orienta decisiones terapéuticas.</p>
-  <p>HLH: linfohistiocitosis hemofagocítica · SAM: síndrome de activación macrofágica.</p>
+  <p>HLH: linfohistiocitosis hemofagocítica.</p>
   <p>Otero Dávila X, et al. Servicio de Medicina Interna, Hospital Álvaro Cunqueiro (Vigo).</p>
 </footer>
 <div class="dock" id="dock" hidden><span class="dn" id="d-num">0</span><span class="dt" id="d-txt">Completa las variables</span><a href="#result">Ver resultado</a></div>
@@ -227,7 +227,7 @@ function update(){
     $('d-txt').textContent = 'Faltan ' + miss.length + (miss.length === 1 ? ' variable' : ' variables');
     drawStrip(null); return;
   }
-  $('break').textContent = 'Variables ' + base + ' + bonus SAM ' + bonus;
+  $('break').textContent = 'Variables ' + base + ' + bonus ' + bonus;
   const z = total < 110 ? ZONES.low : total < 130 ? ZONES.mid : ZONES.high;
   v.className = 'verdict ' + z.cls; $('v-pill').textContent = z.pill; $('v-h').textContent = z.h; $('v-p').textContent = z.p;
   $('d-txt').textContent = z.h; drawStrip(total);
@@ -236,10 +236,13 @@ f.addEventListener('change', update);
 f.addEventListener('reset', () => setTimeout(update, 0));
 $('ex').addEventListener('click', () => {
   f.reset();
-  $('temp-1').checked = true; $('hb').checked = true; $('plt').checked = true;
-  $('ferr-2').checked = true; $('tg-1').checked = true; $('fib-1').checked = true;
-  update();
-  $('break').textContent += ' · ejemplo ilustrativo';
+  // after the reset handler's own deferred update, so the label is not overwritten
+  setTimeout(() => {
+    $('temp-1').checked = true; $('hb').checked = true; $('plt').checked = true;
+    $('ferr-2').checked = true; $('tg-1').checked = true; $('fib-1').checked = true;
+    update();
+    $('break').textContent += ' · ejemplo ilustrativo';
+  }, 0);
 });
 // mini dock on phones while the result card is off-screen
 const dock = $('dock');
